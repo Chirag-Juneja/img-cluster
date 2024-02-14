@@ -1,5 +1,5 @@
 import torch
-from imgcluster.models import *
+from pinaka.model import *
 
 
 def test_model():

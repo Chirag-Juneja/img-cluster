@@ -1,48 +1,45 @@
 import argparse
 import logging
+import multiprocessing
 import torch
 import torch.nn as nn
 import torch.optim as optim
 from torch.utils.data import DataLoader
-from imgcluster.models import AutoEncoder
-from imgcluster.dataset import ImageDataset
+from pinaka.model import AutoEncoder
+from pinaka.dataset import ImageDataset
 from tqdm import tqdm
 from torchvision import transforms
 from pathlib import Path
 
 logging.basicConfig(level=logging.INFO)
+NUM_WORKER = multiprocessing.cpu_count() // 2
 
 
 def parse_args():
-    parser = argparse.ArgumentParser("Unsupervised Image Clustering Model Training")
+    parser = argparse.ArgumentParser("Unsupervised Image Clustering Model Training ")
     parser.add_argument("-b", "--batch-size", default=64, type=int)
     parser.add_argument("--epochs", default=100, type=int)
     parser.add_argument("--device", default="cpu", type=str)
-    parser.add_argument("-o", "--output", default="./checkpoints", type=str)
-    parser.add_argument(
-        "-i", "--input", default="./dataset", type=str, help="path to images"
-    )
+    parser.add_argument("--imgsz", default=32, type=int)
+    parser.add_argument("-ckpt", "--checkpoints", default="./checkpoints", type=str)
+    parser.add_argument("--data", default="./dataset", type=str)
     return parser.parse_args()
 
 
-def train(args: dict):
+def train(epochs, batch_size, device, checkpoints, data, imgsz):
     transform = transforms.Compose(
-        [transforms.Resize((224, 224)), transforms.ToTensor()]
+        [transforms.Resize((imgsz, imgsz)), transforms.ToTensor()]
     )
 
     model = AutoEncoder()
 
-    dataset = ImageDataset(args["input"], transforms=transform)
+    dataset = ImageDataset(data, transforms=transform)
     dataloader = DataLoader(
-        dataset=dataset, batch_size=args["batch_size"], shuffle=True
+        dataset=dataset, batch_size=batch_size, shuffle=True, num_workers=NUM_WORKER
     )
-
-    device = args["device"]
 
     mse = nn.MSELoss()
     optimizer = optim.Adam(model.parameters(), lr=0.001)
-
-    epochs = args["epochs"]
 
     model.to(device)
 
@@ -54,16 +51,20 @@ def train(args: dict):
             loss = mse(output, x)
             loss.backward()
             optimizer.step()
-        logging.info(f"Epoch [{epoch+1}/{epochs}]")
+        logging.info(f"Epoch: [{epoch+1}/{epochs}], Loss: {loss.mean()}")
+        if epoch % 10 == 0 and epoch:
+            torch.save(model.state_dict(), checkpoints + f"/checkpoint-{epoch}.pt")
 
-    torch.save(model.state_dict(), args["output"] + "/model.pt")
+    torch.save(model.state_dict(), checkpoints + "/model.pt")
+
 
 def make_dirs(args):
-    Path(args["output"]).mkdir(parents=True, exist_ok=True)
+    Path(args["checkpoints"]).mkdir(parents=True, exist_ok=True)
+
 
 if __name__ == "__main__":
     args = parse_args()
     args = vars(args)
     logging.info(args)
     make_dirs(args)
-    train(vars(args))
+    train(**args)

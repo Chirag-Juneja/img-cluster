@@ -8,6 +8,7 @@ import torch.optim as optim
 from torch.utils.data import DataLoader
 from pinaka.model import AutoEncoder
 from pinaka.dataset import ImageDataset
+from pinaka.utils.io import load_json
 from tqdm import tqdm
 from torchvision import transforms
 from pathlib import Path
@@ -17,24 +18,25 @@ NUM_WORKER = multiprocessing.cpu_count() // 2
 
 
 def parse_args():
-    parser = argparse.ArgumentParser("Unsupervised Image Clustering Model Training ")
+    parser = argparse.ArgumentParser("PreTrian Task Model Training ")
     parser.add_argument("-b", "--batch-size", default=64, type=int)
     parser.add_argument("--epochs", default=100, type=int)
     parser.add_argument("--device", default="cpu", type=str)
     parser.add_argument("--imgsz", default=32, type=int)
-    parser.add_argument("--ckpt", "--checkpoints", default="./checkpoints", type=str)
+    parser.add_argument("--ckpt", default="./checkpoints", type=str)
     parser.add_argument("--data", default="./dataset", type=str)
     parser.add_argument("--weights", default=None, type=str)
+    parser.add_argument("--config", default=None, type=str)
     return parser.parse_args()
 
 
-def train(
+def pretrain(
     epochs=100,
     batch_size=64,
     device="cuda",
     data="./dataset",
     imgsz=96,
-    checkpoints="./checkpoints/",
+    ckpt="./checkpoints/",
     weights=None,
     **kwargs,
 ):
@@ -48,7 +50,7 @@ def train(
             model.load_state_dict(torch.load(weights))
             logging.info(f"Model weights restored from {weights}")
         except Exception as e:
-            logging.warning(f"Model load failed. {weights}\n {e}")
+            logging.warning(f"Weights load failed. {weights}\n {e}")
 
     dataset = ImageDataset(data, transforms=transform)
     dataloader = DataLoader(
@@ -80,18 +82,20 @@ def train(
 
         logging.info(f"Epoch: [{epoch+1}/{epochs}], Loss: {loss.mean()}")
         if epoch % 10 == 0 and epoch:
-            torch.save(model.state_dict(), checkpoints + f"/checkpoint-{epoch}.pt")
+            torch.save(model.state_dict(), ckpt + f"/checkpoint-{epoch}.pt")
     model.load_state_dict(best_weights)
-    torch.save(model.state_dict(), checkpoints + "/best.pt")
+    torch.save(model.state_dict(), ckpt + "/best.pt")
 
 
-def make_dirs(checkpoints="./checkpoints/", **kwargs):
-    Path(checkpoints).mkdir(parents=True, exist_ok=True)
+def make_dirs(ckpt="./checkpoints/", **kwargs):
+    Path(ckpt).mkdir(parents=True, exist_ok=True)
 
 
 if __name__ == "__main__":
     args = parse_args()
     args = vars(args)
+    if args['config']:
+        args = load_json(args['config'])
     logging.info(args)
     make_dirs(**args)
-    train(**args)
+    pretrain(**args)

@@ -2,7 +2,7 @@ import torch.nn as nn
 import torchvision.models as models
 
 
-class AutoEncoder(nn.Module):
+class EffB0AE(nn.Module):
     def __init__(self):
         super().__init__()
 

@@ -1,10 +1,9 @@
 from torch.utils.data import Dataset
-from torchvision import transforms, utils
 from pathlib import Path
 from PIL import Image
 
 
-class ImageDataset(Dataset):
+class RawDataset(Dataset):
     def __init__(self, root_dir, transforms=None):
         self.root_dir = root_dir
         self.transforms = transforms

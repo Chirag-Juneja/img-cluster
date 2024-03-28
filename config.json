@@ -1,0 +1,10 @@
+{
+    "batch":1024,
+    "epochs":100, 
+    "device":"cuda",
+    "imgsz":64, 
+    "ckpt":"./checkpoints",
+    "save_period":5,
+    "data":"./data/dataset/", 
+    "weights":"./checkpoints/best.pt"
+}

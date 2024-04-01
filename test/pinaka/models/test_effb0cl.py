@@ -5,17 +5,17 @@ from pinaka.models.effb0cl import EffB0CL
 
 class TestEffB0CL:
     classes = [
-            "plane",
-            "car",
-            "bird",
-            "cat",
-            "deer",
-            "dog",
-            "frog",
-            "horse",
-            "ship",
-            "truck",
-        ]
+        "plane",
+        "car",
+        "bird",
+        "cat",
+        "deer",
+        "dog",
+        "frog",
+        "horse",
+        "ship",
+        "truck",
+    ]
 
     def test_output_dim(self):
         model = EffB0CL(self.classes)

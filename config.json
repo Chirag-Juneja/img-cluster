@@ -1,10 +1,13 @@
 {
     "batch":1024,
-    "epochs":100, 
+    "epochs":50, 
     "device":"cuda",
     "imgsz":64, 
-    "ckpt":"./checkpoints",
-    "save_period":5,
+    "ckpt":"./checkpoints/",
+    "save_period":10,
     "data":"./data/dataset/", 
-    "weights":"./checkpoints/best.pt"
+    "weights":"./checkpoints/best.pt",
+    "classes":"./classes.txt",
+    "train_path":"./data/subtrain",
+    "test_path":"./data/valid"
 }

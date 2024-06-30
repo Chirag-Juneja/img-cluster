@@ -6,7 +6,7 @@ from pinaka.utils import logger
 
 class FrameSelector:
     def __init__(self):
-        self.batch_size = 10
+        self.batch = 10
 
     def read_frames(self, video_path):
         frames = []
@@ -29,7 +29,7 @@ class FrameSelector:
         for frame in frames:
             variance = np.append(variance, cv.Laplacian(frame, cv.CV_64F).var())
 
-        p = np.percentile(variance, (1-top)*100)
+        p = np.percentile(variance, (1 - top) * 100)
 
         selected_frames = []
         for frame, var in zip(frames, variance):
@@ -41,9 +41,14 @@ class FrameSelector:
     def filter_blur_frames(self, frames, top):
         selected_frames = []
         frames = np.stack(frames)
-        batches = math.ceil(frames.shape[0]/self.batch_size)
-        for batch in range(batches):
-            selected_frames.extend(self.blur_filter(frames[batch*self.batch_size:batch*self.batch_size+self.batch_size], top))
+        n_batches = math.ceil(frames.shape[0] / self.batch_size)
+        for idx in range(n_batches):
+            selected_frames.extend(
+                self.blur_filter(
+                    frames[idx * self.batch: idx * self.batch + self.batch],
+                    top,
+                )
+            )
         return selected_frames
 
     def select(self, video_path, top=0.1):

@@ -1,12 +1,11 @@
 import cv2 as cv
 import numpy as np
 import math
-from pinaka.utils import logger
 
 
 class FrameSelector:
-    def __init__(self):
-        self.batch = 10
+    def __init__(self, batch=10):
+        self.batch = batch
 
     def read_frames(self, video_path):
         frames = []
@@ -41,7 +40,7 @@ class FrameSelector:
     def filter_blur_frames(self, frames, top):
         selected_frames = []
         frames = np.stack(frames)
-        n_batches = math.ceil(frames.shape[0] / self.batch_size)
+        n_batches = math.ceil(frames.shape[0] / self.batch)
         for idx in range(n_batches):
             selected_frames.extend(
                 self.blur_filter(
